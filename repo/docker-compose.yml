@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: harborsuite-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: harborsuite
+      POSTGRES_USER: harborsuite
+      POSTGRES_PASSWORD: harborsuite
+    ports:
+      - "5432:5432"
+    volumes:
+      - harborsuite_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harborsuite -d harborsuite"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-runtime
+    container_name: harborsuite-app
+    restart: unless-stopped
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql+psycopg://harborsuite:harborsuite@db:5432/harborsuite
+      DB_CONNECT_RETRIES: "40"
+      DB_CONNECT_DELAY_SECONDS: "1"
+      JWT_EXPIRE_MINUTES: "15"
+      JWT_SECRET: offline-demo-secret
+      EXPORT_CHECKSUM_SECRET: offline-export-secret
+      SEED_DEMO_DATA: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - harborsuite_data:/workspace/fullstack/data
+    command: ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-runtime
+    container_name: harborsuite-frontend
+    restart: unless-stopped
+    working_dir: /workspace/fullstack/frontend
+    environment:
+      VITE_API_BASE: http://app:8000
+    command: ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5173"]
+    depends_on:
+      - app
+    ports:
+      - "5173:5173"
+
+volumes:
+  harborsuite_data:
+  harborsuite_pgdata:
