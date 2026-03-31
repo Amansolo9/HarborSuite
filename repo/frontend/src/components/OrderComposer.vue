@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 function toLocalDateTimeInput(date) {
   const copy = new Date(date.getTime())
@@ -112,12 +112,14 @@ function toLocalDateTimeInput(date) {
   return copy.toISOString().slice(0, 16)
 }
 
-const catalog = [
+const DEFAULT_CATALOG = [
   { key: 'food_club_sandwich', sku: 'food_club_sandwich', label: 'Room Service - Club Sandwich', name: 'Club sandwich', unit_price: '14.00', size: 'regular', specs: 'sauce=light' },
   { key: 'spa_express_massage', sku: 'spa_express_massage', label: 'Spa Add-on - Express Massage', name: 'Express massage add-on', unit_price: '65.00', size: '30min', specs: 'therapist=any' },
   { key: 'late_checkout_2pm', sku: 'late_checkout_2pm', label: 'Late Checkout - 2 PM', name: 'Late checkout extension', unit_price: '45.00', size: '2pm', specs: 'floor=any' },
   { key: 'amenity_welcome_basket', sku: 'amenity_welcome_basket', label: 'Amenity - Welcome Basket', name: 'Welcome amenity basket', unit_price: '32.00', size: 'standard', specs: 'snacks=mixed' },
 ]
+
+const catalog = ref([...DEFAULT_CATALOG])
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -162,7 +164,7 @@ const effectiveServiceFee = computed(() => {
 const projectedBeforeTax = computed(() => cartSubtotal.value + packagingFeeAuto.value + effectiveServiceFee.value)
 
 function applyCatalogPreset() {
-  const preset = catalog.find((item) => item.key === itemDraft.catalog_key)
+  const preset = catalog.value.find((item) => item.key === itemDraft.catalog_key)
   if (!preset) {
     return
   }
@@ -171,6 +173,34 @@ function applyCatalogPreset() {
   itemDraft.unit_price = preset.unit_price
   itemDraft.size = preset.size
   itemDraft.specs = preset.specs
+}
+
+async function loadCatalog() {
+  try {
+    const baseUrl = import.meta.env.VITE_API_BASE || ''
+    const response = await fetch(`${baseUrl}/api/v1/orders/catalog`, { credentials: 'include' })
+    if (!response.ok) {
+      return
+    }
+    const rows = await response.json()
+    if (!Array.isArray(rows) || !rows.length) {
+      return
+    }
+    catalog.value = rows.map((row) => ({
+      key: String(row.sku),
+      sku: String(row.sku),
+      label: String(row.label || row.name),
+      name: String(row.name),
+      unit_price: Number(row.unit_price || 0).toFixed(2),
+      size: String(row.size || ''),
+      specs: String(row.specs || ''),
+    }))
+    if (editingItemIndex.value === null) {
+      applyCatalogPreset()
+    }
+  } catch {
+    // Keep local fallback catalog when API is unavailable.
+  }
 }
 
 function parseSpecs(specText) {
@@ -251,6 +281,10 @@ function resetItemDraft() {
   itemDraft.quantity = 1
   itemDraft.delivery_slot_label = 'Standard service window'
 }
+
+onMounted(() => {
+  loadCatalog()
+})
 
 function submitCart() {
   validationError.value = ''

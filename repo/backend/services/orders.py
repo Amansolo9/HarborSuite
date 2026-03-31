@@ -24,33 +24,11 @@ from backend.models import (
     UserAccount,
 )
 from backend.services.audit import audit_event
+from backend.services.catalog import catalog_price_maps, load_catalog_items
 from backend.services.folio import get_folio_for_user
 
 TWOPLACES = Decimal("0.01")
 logger = get_logger(__name__)
-
-CATALOG_PRICES: dict[str, tuple[str, Decimal]] = {
-    "beverage_tea": ("Tea", Decimal("5.00")),
-    "beverage_coffee": ("Coffee", Decimal("6.00")),
-    "beverage_juice": ("Juice", Decimal("7.00")),
-    "food_soup": ("Soup", Decimal("12.00")),
-    "food_club_sandwich": ("Club sandwich", Decimal("14.00")),
-    "spa_express_massage": ("Express massage add-on", Decimal("65.00")),
-    "late_checkout_2pm": ("Late checkout extension", Decimal("45.00")),
-    "amenity_welcome_basket": ("Welcome amenity basket", Decimal("32.00")),
-}
-
-NAME_TO_SKU: dict[str, str] = {
-    "tea": "beverage_tea",
-    "coffee": "beverage_coffee",
-    "juice": "beverage_juice",
-    "soup": "food_soup",
-    "club sandwich": "food_club_sandwich",
-    "express massage add-on": "spa_express_massage",
-    "late checkout extension": "late_checkout_2pm",
-    "welcome amenity basket": "amenity_welcome_basket",
-}
-
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -67,12 +45,13 @@ def _quantize(value: Decimal) -> Decimal:
 
 
 def _normalize_items(items: list[dict[str, object]]) -> list[dict[str, object]]:
+    catalog_prices, name_to_sku = catalog_price_maps()
     normalized: list[dict[str, object]] = []
     for item in items:
-        sku = str(item.get("sku") or NAME_TO_SKU.get(str(item.get("name", "")).strip().lower(), "")).strip()
-        if not sku or sku not in CATALOG_PRICES:
+        sku = str(item.get("sku") or name_to_sku.get(str(item.get("name", "")).strip().lower(), "")).strip()
+        if not sku or sku not in catalog_prices:
             raise ValueError("Unknown catalog item. Submit a valid item SKU.")
-        catalog_name, catalog_price = CATALOG_PRICES[sku]
+        catalog_name, catalog_price = catalog_prices[sku]
         submitted_price_raw = item.get("unit_price")
         if submitted_price_raw is not None:
             submitted = _quantize(Decimal(str(submitted_price_raw)))
@@ -93,6 +72,10 @@ def _normalize_items(items: list[dict[str, object]]) -> list[dict[str, object]]:
             }
         )
     return normalized
+
+
+def list_catalog_items() -> list[dict[str, str]]:
+    return load_catalog_items()
 
 
 def _quote_payload(

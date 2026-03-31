@@ -1,0 +1,66 @@
+[
+  {
+    "sku": "beverage_tea",
+    "label": "Beverage - Tea",
+    "name": "Tea",
+    "unit_price": "5.00",
+    "size": "regular",
+    "specs": "sweetness=low"
+  },
+  {
+    "sku": "beverage_coffee",
+    "label": "Beverage - Coffee",
+    "name": "Coffee",
+    "unit_price": "6.00",
+    "size": "regular",
+    "specs": "milk=whole"
+  },
+  {
+    "sku": "beverage_juice",
+    "label": "Beverage - Juice",
+    "name": "Juice",
+    "unit_price": "7.00",
+    "size": "small",
+    "specs": "ice=no"
+  },
+  {
+    "sku": "food_soup",
+    "label": "Room Service - Soup",
+    "name": "Soup",
+    "unit_price": "12.00",
+    "size": "regular",
+    "specs": "bread=side"
+  },
+  {
+    "sku": "food_club_sandwich",
+    "label": "Room Service - Club Sandwich",
+    "name": "Club sandwich",
+    "unit_price": "14.00",
+    "size": "regular",
+    "specs": "sauce=light"
+  },
+  {
+    "sku": "spa_express_massage",
+    "label": "Spa Add-on - Express Massage",
+    "name": "Express massage add-on",
+    "unit_price": "65.00",
+    "size": "30min",
+    "specs": "therapist=any"
+  },
+  {
+    "sku": "late_checkout_2pm",
+    "label": "Late Checkout - 2 PM",
+    "name": "Late checkout extension",
+    "unit_price": "45.00",
+    "size": "2pm",
+    "specs": "floor=any"
+  },
+  {
+    "sku": "amenity_welcome_basket",
+    "label": "Amenity - Welcome Basket",
+    "name": "Welcome amenity basket",
+    "unit_price": "32.00",
+    "size": "standard",
+    "specs": "snacks=mixed"
+  }
+]

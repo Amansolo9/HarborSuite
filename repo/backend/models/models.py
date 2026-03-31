@@ -69,7 +69,7 @@ class DayCloseStatus(str, enum.Enum):
 
 
 ALLOWED_ORDER_TRANSITIONS = {
-    OrderState.CREATED: {OrderState.CONFIRMED, OrderState.CANCELED},
+    OrderState.CREATED: {OrderState.CONFIRMED, OrderState.IN_PREP, OrderState.CANCELED},
     OrderState.CONFIRMED: {OrderState.IN_PREP, OrderState.CANCELED, OrderState.REFUNDED},
     OrderState.IN_PREP: {OrderState.DELIVERED, OrderState.CANCELED},
     OrderState.DELIVERED: {OrderState.REFUNDED},

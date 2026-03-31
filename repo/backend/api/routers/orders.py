@@ -11,6 +11,7 @@ from backend.schemas.pms import (
     ConfirmQuoteResponse,
     CreateOrderRequest,
     OrderAllocationResponse,
+    OrderCatalogItemResponse,
     OrderMergeRequest,
     OrderResponse,
     OrderSplitRequest,
@@ -19,6 +20,7 @@ from backend.schemas.pms import (
 from backend.services.orders import (
     confirm_quote,
     create_order,
+    list_catalog_items,
     list_order_allocations,
     list_orders,
     merge_order_allocations,
@@ -92,6 +94,13 @@ def confirm_quote_route(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return ConfirmQuoteResponse(reconfirm_token=quote.reconfirm_token, expires_at=quote.expires_at, quote_hash=quote.quote_hash)
+
+
+@router.get("/orders/catalog", response_model=list[OrderCatalogItemResponse])
+def order_catalog_route(user: UserAccount = Depends(get_current_user)) -> list[OrderCatalogItemResponse]:
+    if user.role not in {Role.GUEST, Role.FRONT_DESK, Role.SERVICE_STAFF, Role.FINANCE, Role.GENERAL_MANAGER}:
+        raise HTTPException(status_code=403, detail="Role is not permitted to view order catalog.")
+    return [OrderCatalogItemResponse(**item) for item in list_catalog_items()]
 
 
 @router.post("/orders", response_model=OrderResponse)

@@ -22,6 +22,7 @@ class Settings:
     day_close_room_rate: str
     day_close_tax_rate: str
     order_tax_rule_version: str
+    order_catalog_path: str
     super_admin_usernames: tuple[str, ...]
     seed_demo_data: bool
     session_cookie_name: str
@@ -58,6 +59,7 @@ settings = Settings(
     day_close_room_rate=os.getenv("DAY_CLOSE_ROOM_RATE", "149.00"),
     day_close_tax_rate=os.getenv("DAY_CLOSE_TAX_RATE", "0.10"),
     order_tax_rule_version=os.getenv("ORDER_TAX_RULE_VERSION", "standard-2026"),
+    order_catalog_path=os.getenv("ORDER_CATALOG_PATH", "data/order_catalog.json"),
     super_admin_usernames=_env_csv("SUPER_ADMIN_USERNAMES"),
     seed_demo_data=_env_bool("SEED_DEMO_DATA", True),
     session_cookie_name=os.getenv("SESSION_COOKIE_NAME", "harborsuite_session"),

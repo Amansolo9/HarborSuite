@@ -71,6 +71,23 @@ def test_auth_me_and_overview(client: TestClient) -> None:
     assert client.get("/api/v1/operations/overview", headers=headers).status_code == 200
 
 
+def test_order_catalog_endpoint_returns_runtime_catalog(client: TestClient) -> None:
+    guest = auth_headers(client, "guest@seabreeze.local")
+    response = client.get("/api/v1/orders/catalog", headers=guest)
+    assert response.status_code == 200
+    rows = response.json()
+    assert rows
+    assert any(row["sku"] == "food_club_sandwich" for row in rows)
+
+
+def test_order_transition_allows_created_to_in_prep(client: TestClient) -> None:
+    order_id = _create_order(client)
+    desk = auth_headers(client, "desk@seabreeze.local")
+    response = client.post(f"/api/v1/orders/{order_id}/transition", headers=desk, json={"next_state": "in_prep"})
+    assert response.status_code == 200
+    assert response.json()["state"] == "in_prep"
+
+
 def test_folio_adjustment_split_merge_and_receipt_paths(client: TestClient) -> None:
     folio = _folio_for_guest("Maya Chen")
     finance = auth_headers(client, "finance@seabreeze.local")

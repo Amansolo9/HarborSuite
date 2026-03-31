@@ -32,6 +32,12 @@ def test_valid_order_transition() -> None:
     assert order.state == OrderState.CONFIRMED
 
 
+def test_created_to_in_prep_transition_is_allowed() -> None:
+    order = _order(OrderState.CREATED)
+    order.transition_to(OrderState.IN_PREP)
+    assert order.state == OrderState.IN_PREP
+
+
 def test_refund_transition_from_delivered_is_allowed() -> None:
     order = _order(OrderState.DELIVERED)
     order.transition_to(OrderState.REFUNDED)

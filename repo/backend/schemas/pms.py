@@ -86,6 +86,15 @@ class ConfirmQuoteResponse(BaseModel):
     quote_hash: str
 
 
+class OrderCatalogItemResponse(BaseModel):
+    sku: str
+    label: str
+    name: str
+    unit_price: Decimal = Field(ge=0)
+    size: str | None = None
+    specs: str | None = None
+
+
 class OrderResponse(BaseModel):
     id: str
     folio_id: str

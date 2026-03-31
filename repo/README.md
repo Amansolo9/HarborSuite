@@ -49,9 +49,15 @@ docker compose up -d db
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+# Linux/macOS
+source .venv/bin/activate
 python -m pip install -r backend/requirements.txt
-set DATABASE_URL=postgresql+psycopg://harborsuite:harborsuite@localhost:5432/harborsuite
+# Windows PowerShell
+$env:DATABASE_URL="postgresql+psycopg://harborsuite:harborsuite@localhost:5432/harborsuite"
+# Linux/macOS
+export DATABASE_URL="postgresql+psycopg://harborsuite:harborsuite@localhost:5432/harborsuite"
 python scripts/bootstrap_db.py
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -61,7 +67,10 @@ Local backend defaults to PostgreSQL (`postgresql+psycopg://harborsuite:harborsu
 If you want a quick SQLite-only fallback for ad hoc local development:
 
 ```bash
-set DATABASE_URL=sqlite:///./fullstack.db
+# Windows PowerShell
+$env:DATABASE_URL="sqlite:///./fullstack.db"
+# Linux/macOS
+export DATABASE_URL="sqlite:///./fullstack.db"
 python scripts/bootstrap_db.py
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -176,5 +185,11 @@ Demo credentials are only seeded when `SEED_DEMO_DATA=true` (default in dev). In
 - Docker path uses PostgreSQL for persistent on-prem style deployment.
 - Non-Docker acceptance verification is PostgreSQL-first.
 - SQLite remains an explicit local fallback only when `DATABASE_URL=sqlite:///./fullstack.db` is set.
+
+## Order catalog configuration
+
+- Authoritative order catalog data is read at runtime from `data/order_catalog.json` (or `ORDER_CATALOG_PATH` if set).
+- Backend quote/order validation and frontend catalog picker both use this API-backed catalog (`GET /api/v1/orders/catalog`).
+- Updating the catalog file does not require frontend code edits.
 
 Architecture and API behavior docs are maintained at repository root (`../docs/design.md`, `../docs/api-spec.md`).
