@@ -1,0 +1,1020 @@
+{
+  "info": {
+    "_postman_id": "c4fb9f7e-7e2f-49ea-8e56-131f2017788e",
+    "name": "HarborSuite API - Full Ordered Flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Ordered, screen-recording friendly HarborSuite API collection. Run requests top-to-bottom."
+  },
+  "item": [
+    {
+      "name": "01 - Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "02 - Login (Guest)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Guest login OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('token_guest', r.access_token || '');",
+              "pm.collectionVariables.set('organization_id', r.organization_id || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "bearer" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_guest}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "03 - Login (Front Desk)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Front desk login OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('token_desk', r.access_token || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "bearer" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_desk}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "04 - Login (Service Staff)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Service login OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('token_service', r.access_token || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "bearer" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_service}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "05 - Login (Finance)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Finance login OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('token_finance', r.access_token || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "bearer" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_finance}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "06 - Login (Content Editor)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Editor login OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('token_editor', r.access_token || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "bearer" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_editor}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "07 - Login (General Manager)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GM login OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('token_gm', r.access_token || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "bearer" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_gm}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "08 - Auth Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_desk}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/auth/me"
+      }
+    },
+    {
+      "name": "09 - Operations Overview",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_desk}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/operations/overview"
+      }
+    },
+    {
+      "name": "10 - List Folios (sets folio vars)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('List folios OK', function () { pm.response.to.have.status(200); });",
+              "const rows = pm.response.json();",
+              "if (rows.length > 0) pm.collectionVariables.set('folio_id', rows[0].id);",
+              "if (rows.length > 1) pm.collectionVariables.set('secondary_folio_id', rows[1].id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_finance}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/folios?limit=50&offset=0"
+      }
+    },
+    {
+      "name": "11 - Orders Catalog",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_guest}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/orders/catalog"
+      }
+    },
+    {
+      "name": "12 - Confirm Quote (sets reconfirm token)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const now = new Date();",
+              "const end = new Date(now.getTime() + 45 * 60 * 1000);",
+              "pm.collectionVariables.set('delivery_window_start', now.toISOString());",
+              "pm.collectionVariables.set('delivery_window_end', end.toISOString());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Confirm quote OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('reconfirm_token', r.reconfirm_token || '');",
+              "pm.collectionVariables.set('quote_hash', r.quote_hash || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_guest}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"folio_id\": \"{{folio_id}}\",\n  \"items\": [\n    {\n      \"sku\": \"food_club_sandwich\",\n      \"name\": \"Club sandwich\",\n      \"quantity\": 1,\n      \"unit_price\": \"14.00\",\n      \"size\": \"regular\",\n      \"specs\": {\"sauce\": \"light\"},\n      \"delivery_slot_label\": \"late-night\"\n    }\n  ],\n  \"payment_method\": \"cash\",\n  \"packaging_fee\": \"1.00\",\n  \"service_fee\": \"1.00\",\n  \"tax_rate\": \"0.10\",\n  \"delivery_window_start\": \"{{delivery_window_start}}\",\n  \"delivery_window_end\": \"{{delivery_window_end}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders/confirm-quote"
+      }
+    },
+    {
+      "name": "13 - Create Order (sets order_id)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('price_confirmed_at', new Date().toISOString());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Create order OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('order_id', r.id || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_guest}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"folio_id\": \"{{folio_id}}\",\n  \"items\": [\n    {\n      \"sku\": \"food_club_sandwich\",\n      \"name\": \"Club sandwich\",\n      \"quantity\": 1,\n      \"unit_price\": \"14.00\",\n      \"size\": \"regular\",\n      \"specs\": {\"sauce\": \"light\"},\n      \"delivery_slot_label\": \"late-night\"\n    }\n  ],\n  \"payment_method\": \"cash\",\n  \"packaging_fee\": \"1.00\",\n  \"service_fee\": \"1.00\",\n  \"tax_rate\": \"0.10\",\n  \"delivery_window_start\": \"{{delivery_window_start}}\",\n  \"delivery_window_end\": \"{{delivery_window_end}}\",\n  \"price_confirmed_at\": \"{{price_confirmed_at}}\",\n  \"reconfirm_token\": \"{{reconfirm_token}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders"
+      }
+    },
+    {
+      "name": "14 - List Orders",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_guest}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/orders?sort=created_desc&limit=50&offset=0"
+      }
+    },
+    {
+      "name": "15 - Transition Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_desk}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"next_state\": \"in_prep\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders/{{order_id}}/transition"
+      }
+    },
+    {
+      "name": "16 - Split Order Allocations",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_desk}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"allocations\": [\n    {\"supplier\": \"S1\", \"warehouse\": \"W1\", \"sla_tier\": \"gold\", \"quantity\": 1},\n    {\"supplier\": \"S2\", \"warehouse\": \"W2\", \"sla_tier\": \"silver\", \"quantity\": 1}\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders/{{order_id}}/split"
+      }
+    },
+    {
+      "name": "17 - Merge Order Allocations",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_desk}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"supplier\": \"Merged\",\n  \"warehouse\": \"WH\",\n  \"sla_tier\": \"standard\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders/{{order_id}}/merge"
+      }
+    },
+    {
+      "name": "18 - List Order Allocations",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_desk}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/orders/{{order_id}}/allocations?limit=50&offset=0"
+      }
+    },
+    {
+      "name": "18.1 - Session Refresh (Finance)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_finance}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "19 - Post Folio Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": \"10.00\",\n  \"payment_method\": \"cash\",\n  \"note\": \"Postman recording payment\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/payments"
+      }
+    },
+    {
+      "name": "20 - Post Folio Charge",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": \"12.00\",\n  \"reason\": \"Manual minibar charge\",\n  \"payment_method\": \"direct_bill\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/charges"
+      }
+    },
+    {
+      "name": "21 - Post Folio Adjustment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": \"5.00\",\n  \"reason\": \"Manual reconciliation entry\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/adjustments"
+      }
+    },
+    {
+      "name": "22 - Post Folio Reversal",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": \"3.00\",\n  \"reason\": \"Desk correction\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/reversals"
+      }
+    },
+    {
+      "name": "23 - Split Folio",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"allocations\": [\"20.00\", \"20.00\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/split"
+      }
+    },
+    {
+      "name": "24 - List Folio Splits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/splits?limit=50&offset=0"
+      }
+    },
+    {
+      "name": "25 - Merge Folios",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"primary_folio_id\": \"{{folio_id}}\",\n  \"secondary_folio_id\": \"{{secondary_folio_id}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/folios/merge"
+      }
+    },
+    {
+      "name": "26 - Get Folio Receipt",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/receipt"
+      }
+    },
+    {
+      "name": "27 - Print Folio Receipt",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/print"
+      }
+    },
+    {
+      "name": "28 - Get Folio Invoice",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/invoice"
+      }
+    },
+    {
+      "name": "29 - Print Folio Invoice",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/folios/{{folio_id}}/print-invoice"
+      }
+    },
+    {
+      "name": "29.1 - Session Refresh (Content Editor)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_editor}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "30 - Create Content Release (sets release_id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Create release OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('release_id', r.id || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Pool hours update\",\n  \"body\": \"Pool closes at 21:30 for maintenance sweep.\",\n  \"content_type\": \"announcement\",\n  \"target_roles\": [\"guest\"],\n  \"target_tags\": [\"all\"],\n  \"target_organizations\": [\"all\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/content/releases"
+      }
+    },
+    {
+      "name": "31 - List Content Releases",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/content/releases?limit=50&offset=0"
+      }
+    },
+    {
+      "name": "31.1 - Session Refresh (General Manager)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_gm}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "32 - Approve Content Release",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/content/releases/{{release_id}}/approve"
+      }
+    },
+    {
+      "name": "32.1 - Session Refresh (Content Editor)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_editor}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "33 - Rollback Content Release",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/content/releases/{{release_id}}/rollback"
+      }
+    },
+    {
+      "name": "33.1 - Session Refresh (Guest)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_guest}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "34 - Create Complaint (sets complaint_id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Create complaint OK', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('complaint_id', r.id || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"folio_id\": \"{{folio_id}}\",\n  \"subject\": \"Late tray arrival\",\n  \"detail\": \"Room service arrived cold and later than promised.\",\n  \"service_rating\": 2,\n  \"violation_flag\": true\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/complaints"
+      }
+    },
+    {
+      "name": "35 - Complaint Packet Metadata",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/complaints/{{complaint_id}}/packet"
+      }
+    },
+    {
+      "name": "36 - Complaint Packet Download",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/complaints/{{complaint_id}}/packet/download"
+      }
+    },
+    {
+      "name": "36.1 - Session Refresh (Guest)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_guest}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "37 - Submit Rating",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to_username\": \"{{username_service}}\",\n  \"score\": 5,\n  \"comment\": \"Great delivery\",\n  \"order_id\": \"{{order_id}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/ratings"
+      }
+    },
+    {
+      "name": "38 - List My Ratings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/ratings/me?limit=50&offset=0"
+      }
+    },
+    {
+      "name": "38.1 - Session Refresh (Finance)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_finance}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "39 - Create Export",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"export_type\": \"nightly-close\",\n  \"scope\": \"org\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/exports"
+      }
+    },
+    {
+      "name": "39.1 - Session Refresh (General Manager)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_gm}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "40 - Audit Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/audit/logs?sort=created_desc&limit=50&offset=0"
+      }
+    },
+    {
+      "name": "41 - Governance Metric",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"metric_name\": \"occupancy_rate\",\n  \"description\": \"Daily occupancy by sold rooms\",\n  \"source_query_ref\": \"query://analytics/occupancy/v1\",\n  \"version\": 1\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/governance/metrics"
+      }
+    },
+    {
+      "name": "41.1 - Session Refresh (Finance)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_finance}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "42 - Governance Dataset (sets dataset_version_id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Dataset created', function () { pm.response.to.have.status(200); });",
+              "const r = pm.response.json();",
+              "pm.collectionVariables.set('dataset_version_id', r.id || '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"dataset_name\": \"folios_snapshot\",\n  \"version\": \"v1\",\n  \"dataset_schema\": {\n    \"folio_id\": \"string\",\n    \"balance\": \"decimal\"\n  }\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/governance/datasets"
+      }
+    },
+    {
+      "name": "43 - Governance Lineage",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"metric_name\": \"occupancy_rate\",\n  \"dataset_version_id\": \"{{dataset_version_id}}\",\n  \"source_tables\": [\"folios\", \"orders\"],\n  \"source_query_ref\": \"query://analytics/occupancy/v1\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/governance/lineage"
+      }
+    },
+    {
+      "name": "44 - List Governance Lineage",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/governance/lineage?limit=50&offset=0"
+      }
+    },
+    {
+      "name": "45 - Governance Dictionary Export",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/governance/dictionary/export"
+      }
+    },
+    {
+      "name": "46 - Credit Score Calculate",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_guest}}\",\n  \"rating\": 5,\n  \"penalties\": [10, 15],\n  \"violation\": true,\n  \"note\": \"late payment\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/credit-score/calculate"
+      }
+    },
+    {
+      "name": "47 - Credit Profile",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/credit-score/{{username_guest}}"
+      }
+    },
+    {
+      "name": "48 - Night Audit Run",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/api/v1/night-audit/run"
+      }
+    },
+    {
+      "name": "49 - Day Close Run",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/api/v1/day-close/run"
+      }
+    },
+    {
+      "name": "49.1 - Session Refresh (General Manager)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_gm}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "50 - GM Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/analytics/gm-dashboard"
+      }
+    },
+    {
+      "name": "50.1 - Session Refresh (Service Staff)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_service}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "51 - Service Durations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/analytics/service-durations"
+      }
+    },
+    {
+      "name": "51.1 - Session Refresh (Finance)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_finance}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "52 - Analytics Snapshot",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"snapshot_type\": \"service_durations\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/analytics/snapshots"
+      }
+    },
+    {
+      "name": "52.1 - Session Refresh (Guest)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-harborsuite-auth-mode", "value": "cookie" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username_guest}}\",\n  \"password\": \"{{password_default}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "53 - Auth Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/auth/logout"
+      }
+    }
+  ],
+  "variable": [
+    { "key": "token_guest", "value": "" },
+    { "key": "token_desk", "value": "" },
+    { "key": "token_service", "value": "" },
+    { "key": "token_finance", "value": "" },
+    { "key": "token_editor", "value": "" },
+    { "key": "token_gm", "value": "" },
+    { "key": "folio_id", "value": "" },
+    { "key": "secondary_folio_id", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "release_id", "value": "" },
+    { "key": "complaint_id", "value": "" },
+    { "key": "dataset_version_id", "value": "" },
+    { "key": "delivery_window_start", "value": "" },
+    { "key": "delivery_window_end", "value": "" },
+    { "key": "price_confirmed_at", "value": "" },
+    { "key": "reconfirm_token", "value": "" },
+    { "key": "quote_hash", "value": "" },
+    { "key": "organization_id", "value": "" }
+  ]
+}
