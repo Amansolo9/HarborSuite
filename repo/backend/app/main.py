@@ -68,14 +68,17 @@ app = FastAPI(
 CSRF_COOKIE_NAME = "harborsuite_csrf"
 CSRF_HEADER_NAME = "x-csrf-token"
 CSRF_SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+CSRF_EXEMPT_PATHS = {"/api/v1/auth/login"}
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
-        if request.method not in CSRF_SAFE_METHODS:
+        if request.method not in CSRF_SAFE_METHODS and request.url.path not in CSRF_EXEMPT_PATHS:
+            auth_header = request.headers.get("authorization") or ""
+            uses_bearer = auth_header.lower().startswith("bearer ")
             session_cookie = request.cookies.get(settings.session_cookie_name)
-            if session_cookie:
+            if session_cookie and not uses_bearer:
                 header_token = request.headers.get(CSRF_HEADER_NAME)
                 if not csrf_cookie or not header_token or header_token != csrf_cookie:
                     return Response("CSRF token missing or invalid", status_code=403)
