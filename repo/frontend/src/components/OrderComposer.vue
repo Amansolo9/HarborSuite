@@ -95,6 +95,7 @@
         <p>Packaging fee: ${{ packagingFeeAuto.toFixed(2) }}</p>
         <strong>Quoted total before tax: ${{ projectedBeforeTax.toFixed(2) }}</strong>
       </article>
+      <p v-if="usingFallbackCatalog" class="message error full-span">Catalog could not be loaded from the server. Prices shown may be outdated. Refresh or try again before submitting.</p>
       <p class="hint full-span">Packaging fee policy: $2.50 is applied automatically when the cart includes food items.</p>
       <p v-if="validationError" class="message error full-span">{{ validationError }}</p>
       <button class="primary-button" :disabled="loading || !cartItems.length">{{ loading ? 'Posting...' : 'Confirm quote for cart' }}</button>
@@ -120,6 +121,7 @@ const DEFAULT_CATALOG = [
 ]
 
 const catalog = ref([...DEFAULT_CATALOG])
+const usingFallbackCatalog = ref(true)
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -195,11 +197,12 @@ async function loadCatalog() {
       size: String(row.size || ''),
       specs: String(row.specs || ''),
     }))
+    usingFallbackCatalog.value = false
     if (editingItemIndex.value === null) {
       applyCatalogPreset()
     }
   } catch {
-    // Keep local fallback catalog when API is unavailable.
+    usingFallbackCatalog.value = true
   }
 }
 

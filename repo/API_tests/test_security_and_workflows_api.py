@@ -33,9 +33,11 @@ def _quote_token(
     item_price: str = "5.00",
     item_specs: dict[str, str] | None = None,
 ) -> dict[str, str]:
+    from decimal import Decimal, ROUND_HALF_UP
     start = datetime.now(timezone.utc).isoformat()
     end = (datetime.now(timezone.utc) + timedelta(minutes=45)).isoformat()
     specs = item_specs or {"sweetness": "low"}
+    service_fee = str((Decimal(item_price) * Decimal("0.18")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
     quote = client.post(
         "/api/v1/orders/confirm-quote",
         headers=headers,
@@ -52,15 +54,15 @@ def _quote_token(
                 }
             ],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": service_fee,
             "tax_rate": "0.10",
             "delivery_window_start": start,
             "delivery_window_end": end,
         },
     )
     assert quote.status_code == 200
-    return {"token": quote.json()["reconfirm_token"], "start": start, "end": end}
+    return {"token": quote.json()["reconfirm_token"], "start": start, "end": end, "service_fee": service_fee}
 
 
 def test_protected_routes_require_authentication(client: TestClient) -> None:
@@ -80,8 +82,8 @@ def test_quote_confirmation_required_for_order_submission(client: TestClient) ->
             "folio_id": folio_id,
             "items": [{"name": "Tea", "quantity": 1, "unit_price": "5.00", "size": "small", "specs": {"sweetness": "low"}, "delivery_slot_label": "afternoon"}],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": "0.90",
             "tax_rate": "0.10",
             "delivery_window_start": confirmed["start"],
             "delivery_window_end": confirmed["end"],
@@ -98,8 +100,8 @@ def test_quote_confirmation_required_for_order_submission(client: TestClient) ->
             "folio_id": folio_id,
             "items": [{"name": "Tea", "quantity": 2, "unit_price": "5.00", "size": "small", "specs": {"sweetness": "low"}, "delivery_slot_label": "afternoon"}],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": "0.90",
             "tax_rate": "0.10",
             "delivery_window_start": confirmed["start"],
             "delivery_window_end": confirmed["end"],
@@ -116,8 +118,8 @@ def test_quote_confirmation_required_for_order_submission(client: TestClient) ->
             "folio_id": folio_id,
             "items": [{"name": "Tea", "quantity": 1, "unit_price": "1.00", "size": "small", "specs": {"sweetness": "low"}}],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": "0.90",
             "tax_rate": "0.10",
             "delivery_window_start": confirmed["start"],
             "delivery_window_end": confirmed["end"],
@@ -138,8 +140,8 @@ def test_order_requires_recent_confirmation_and_reversal_reason(client: TestClie
             "folio_id": folio_id,
             "items": [{"name": "Tea", "quantity": 1, "unit_price": "5.00", "size": "small", "specs": {"sweetness": "low"}, "delivery_slot_label": "afternoon"}],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": "0.90",
             "tax_rate": "0.10",
             "delivery_window_start": confirmed["start"],
             "delivery_window_end": confirmed["end"],
@@ -156,8 +158,8 @@ def test_order_requires_recent_confirmation_and_reversal_reason(client: TestClie
             "folio_id": folio_id,
             "items": [{"name": "Tea", "quantity": 1, "unit_price": "5.00", "size": "small", "specs": {"sweetness": "low"}, "delivery_slot_label": "afternoon"}],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": "0.90",
             "tax_rate": "0.10",
             "delivery_window_start": confirmed["start"],
             "delivery_window_end": confirmed["end"],
@@ -347,8 +349,8 @@ def test_refund_writes_adjustment_entry(client: TestClient) -> None:
             "folio_id": folio_id,
             "items": [{"name": "Juice", "quantity": 1, "unit_price": "7.00", "size": "small", "specs": {"ice": "no"}, "delivery_slot_label": "afternoon"}],
             "payment_method": "cash",
-            "packaging_fee": "1.00",
-            "service_fee": "1.00",
+            "packaging_fee": "2.50",
+            "service_fee": confirmed["service_fee"],
             "tax_rate": "0.10",
             "delivery_window_start": confirmed["start"],
             "delivery_window_end": confirmed["end"],

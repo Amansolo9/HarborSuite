@@ -59,7 +59,7 @@ class CreateOrderRequest(BaseModel):
     folio_id: str
     items: list[OrderItemRequest] = Field(min_length=1)
     payment_method: PaymentMethod
-    packaging_fee: Decimal = Field(default=Decimal("0.00"), ge=0)
+    packaging_fee: Decimal = Field(default=Decimal("2.50"), ge=0)
     service_fee: Decimal = Field(default=Decimal("0.00"), ge=0)
     tax_rate: Decimal = Field(default=Decimal("0.10"), ge=0, le=1)
     order_note: str | None = Field(default=None, max_length=250)
@@ -73,7 +73,7 @@ class ConfirmQuoteRequest(BaseModel):
     folio_id: str
     items: list[OrderItemRequest] = Field(min_length=1)
     payment_method: PaymentMethod
-    packaging_fee: Decimal = Field(default=Decimal("0.00"), ge=0)
+    packaging_fee: Decimal = Field(default=Decimal("2.50"), ge=0)
     service_fee: Decimal = Field(default=Decimal("0.00"), ge=0)
     tax_rate: Decimal = Field(default=Decimal("0.10"), ge=0, le=1)
     delivery_window_start: datetime

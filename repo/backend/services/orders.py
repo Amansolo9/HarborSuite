@@ -107,6 +107,19 @@ def _quote_hash(payload: dict[str, object]) -> str:
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
+def _validate_service_fee(items: list[dict[str, object]], service_fee: Decimal) -> None:
+    if service_fee == _quantize(Decimal("0.00")):
+        return
+    normalized = _normalize_items(items)
+    subtotal = sum(
+        (Decimal(str(it["unit_price"])) * Decimal(int(str(it["quantity"]))) for it in normalized),
+        Decimal("0.00"),
+    )
+    expected = _quantize(subtotal * Decimal("0.18"))
+    if _quantize(service_fee) != expected:
+        raise ValueError("Service fee must be either $0.00 or exactly 18% of subtotal.")
+
+
 def _validate_delivery_window(start: datetime, end: datetime) -> None:
     utc_start = _as_utc(start)
     utc_end = _as_utc(end)
@@ -136,6 +149,9 @@ def confirm_quote(
 ) -> OrderQuote:
     folio = get_folio_for_user(db, user, folio_id)
     _validate_delivery_window(delivery_window_start, delivery_window_end)
+    if packaging_fee != _quantize(Decimal("2.50")):
+        raise ValueError("Packaging fee must be $2.50 per food order.")
+    _validate_service_fee(items, service_fee)
     payload = _quote_payload(
         folio_id=folio.id,
         items=items,
@@ -196,6 +212,9 @@ def create_order(
     folio = get_folio_for_user(db, user, folio_id)
     _validate_delivery_window(delivery_window_start, delivery_window_end)
     _ensure_recent_confirmation(price_confirmed_at)
+    if packaging_fee != _quantize(Decimal("2.50")):
+        raise ValueError("Packaging fee must be $2.50 per food order.")
+    _validate_service_fee(items, service_fee)
     payload = _quote_payload(
         folio_id=folio.id,
         items=items,
@@ -249,25 +268,30 @@ def create_order(
         return order
     except Exception as exc:
         db.rollback()
-        db.add(
-            FolioEntry(
-                folio_id=folio.id,
-                entry_type=FolioEntryType.ADJUSTMENT,
-                amount=total,
-                payment_method=payment_method,
-                note=f"Compensating entry: failed order create ({str(exc)[:120]})",
+        try:
+            db.add(
+                FolioEntry(
+                    folio_id=folio.id,
+                    entry_type=FolioEntryType.ADJUSTMENT,
+                    amount=total,
+                    payment_method=payment_method,
+                    note=f"Compensating entry: failed order create ({str(exc)[:120]})",
+                )
             )
-        )
-        audit_event(
-            db,
-            user,
-            "order_create_compensated",
-            "folio",
-            folio.id,
-            {"reason": str(exc)[:120], "amount": str(total)},
-        )
-        db.commit()
-        log_event(logger, "finance", "order_create_compensated", folio_id=folio.id, amount=str(total), reason=str(exc)[:120])
+            audit_event(
+                db,
+                user,
+                "order_create_compensated",
+                "folio",
+                folio.id,
+                {"reason": str(exc)[:120], "amount": str(total)},
+            )
+            db.commit()
+            log_event(logger, "finance", "order_create_compensated", folio_id=folio.id, amount=str(total), reason=str(exc)[:120])
+        except Exception as comp_exc:
+            db.rollback()
+            log_event(logger, "finance", "compensating_entry_failed", folio_id=folio.id, amount=str(total), reason=str(comp_exc)[:120])
+            logger.exception("Failed to write compensating folio entry for order creation failure")
         raise ValueError("Order processing failed. A compensating folio entry was posted.") from exc
 
 

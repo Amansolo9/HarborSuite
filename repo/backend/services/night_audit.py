@@ -38,6 +38,7 @@ class NightAuditService:
             charges = Decimal("0.00")
             payments = Decimal("0.00")
             adjustments = Decimal("0.00")
+            reversals = Decimal("0.00")
             for entry in folio.entries:
                 if entry.entry_type == FolioEntryType.CHARGE:
                     charges += entry.amount
@@ -45,7 +46,9 @@ class NightAuditService:
                     payments += entry.amount
                 elif entry.entry_type == FolioEntryType.ADJUSTMENT:
                     adjustments += entry.amount
-            delta = (charges - payments - adjustments).quantize(Decimal("0.01"))
+                elif entry.entry_type == FolioEntryType.REVERSAL:
+                    reversals += entry.amount
+            delta = (charges - payments - adjustments - reversals).quantize(Decimal("0.01"))
             passed = abs(delta) <= self.TOLERANCE
             result = NightAuditResult(
                 folio_id=folio.id,

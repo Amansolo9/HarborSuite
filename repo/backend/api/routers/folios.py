@@ -171,7 +171,7 @@ def list_folio_splits_route(
 @router.post("/folios/merge", response_model=FolioReceiptResponse)
 def merge_folios_route(
     payload: FolioMergeRequest,
-    user: UserAccount = Depends(require_roles(Role.FINANCE)),
+    user: UserAccount = Depends(require_roles(Role.FRONT_DESK, Role.FINANCE)),
     db: Session = Depends(get_db),
 ) -> FolioReceiptResponse:
     try:

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import secrets
 from contextlib import asynccontextmanager
 import threading
 from datetime import datetime
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.api.routes import router as api_router
 from backend.core.config import settings
@@ -23,13 +25,17 @@ def _scheduler_stop_event() -> threading.Event:
 
 
 def _day_close_loop(stop_event: threading.Event) -> None:
+    last_run_date: str | None = None
     while not stop_event.is_set():
         try:
             now = datetime.now()
             cutoff_hour, cutoff_minute = [int(part) for part in settings.day_close_cutoff_time.split(":", 1)]
-            if now.hour == cutoff_hour and now.minute == cutoff_minute:
+            today = now.strftime("%Y-%m-%d")
+            cutoff_reached = now.hour > cutoff_hour or (now.hour == cutoff_hour and now.minute >= cutoff_minute)
+            if cutoff_reached and last_run_date != today:
                 with SessionLocal() as db:
                     run_day_close(db, actor=None)
+                last_run_date = today
         except Exception as exc:
             log_event(logger, "scheduler", "day_close_loop_error", error=str(exc))
             logger.exception("Day-close scheduler loop failed")
@@ -59,9 +65,38 @@ app = FastAPI(
     version="0.2.0",
     lifespan=lifespan,
 )
+CSRF_COOKIE_NAME = "harborsuite_csrf"
+CSRF_HEADER_NAME = "x-csrf-token"
+CSRF_SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+
+
+class CSRFMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+        if request.method not in CSRF_SAFE_METHODS:
+            session_cookie = request.cookies.get(settings.session_cookie_name)
+            if session_cookie:
+                header_token = request.headers.get(CSRF_HEADER_NAME)
+                if not csrf_cookie or not header_token or header_token != csrf_cookie:
+                    return Response("CSRF token missing or invalid", status_code=403)
+        response = await call_next(request)
+        if not csrf_cookie:
+            token = secrets.token_urlsafe(32)
+            response.set_cookie(
+                key=CSRF_COOKIE_NAME,
+                value=token,
+                httponly=False,
+                secure=settings.session_cookie_secure,
+                samesite="lax",
+                path="/",
+            )
+        return response
+
+
+app.add_middleware(CSRFMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[o.strip() for o in settings.cors_allowed_origins.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

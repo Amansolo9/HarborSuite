@@ -5,6 +5,13 @@ export function createApiClient({ baseUrl, getToken }) {
     const optionHeaders = options.headers || {}
     const token = getToken()
     const method = (options.method || 'GET').toUpperCase()
+    const csrfHeaders = {}
+    if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+      const csrfMatch = document.cookie.match(/(?:^|;\s*)harborsuite_csrf=([^;]+)/)
+      if (csrfMatch) {
+        csrfHeaders['x-csrf-token'] = decodeURIComponent(csrfMatch[1])
+      }
+    }
     let response
     try {
       response = await fetch(`${baseUrl}${path}`, {
@@ -13,6 +20,7 @@ export function createApiClient({ baseUrl, getToken }) {
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...csrfHeaders,
           ...optionHeaders,
         },
       })

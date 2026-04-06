@@ -45,7 +45,7 @@ def run_day_close(
         existing = db.execute(
             select(DayCloseRun).where(DayCloseRun.organization_id == org.id, DayCloseRun.business_date == business_day)
         ).scalar_one_or_none()
-        if existing is not None:
+        if existing is not None and existing.status == DayCloseStatus.COMPLETED:
             all_runs.append(
                 {
                     "organization_id": org.id,
@@ -57,6 +57,9 @@ def run_day_close(
                 }
             )
             continue
+        if existing is not None:
+            db.delete(existing)
+            db.flush()
 
         folios = list(
             db.execute(
@@ -100,7 +103,11 @@ def run_day_close(
                 folio.closed_at = _now()
             status = DayCloseStatus.COMPLETED
         else:
+            db.rollback()
+            for folio in folios:
+                db.refresh(folio)
             status = DayCloseStatus.FAILED
+            auto_posted_entries = 0
 
         run = DayCloseRun(
             organization_id=org.id,

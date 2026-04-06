@@ -89,7 +89,7 @@ def post_reversal(db: Session, user: UserAccount, folio_id: str, amount: Decimal
     db.add(
         FolioEntry(
             folio_id=folio.id,
-            entry_type=FolioEntryType.ADJUSTMENT,
+            entry_type=FolioEntryType.REVERSAL,
             amount=amount,
             note=f"Reversal: {reason}",
         )
@@ -106,7 +106,7 @@ def folio_balance(folio: Folio) -> Decimal:
     for entry in folio.entries:
         if entry.entry_type == FolioEntryType.CHARGE:
             balance += entry.amount
-        else:
+        elif entry.entry_type in {FolioEntryType.PAYMENT, FolioEntryType.ADJUSTMENT, FolioEntryType.REVERSAL}:
             balance -= entry.amount
     return balance
 

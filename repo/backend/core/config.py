@@ -25,6 +25,7 @@ class Settings:
     order_catalog_path: str
     super_admin_usernames: tuple[str, ...]
     seed_demo_data: bool
+    cors_allowed_origins: str
     session_cookie_name: str
     session_cookie_secure: bool
 
@@ -62,6 +63,7 @@ settings = Settings(
     order_catalog_path=os.getenv("ORDER_CATALOG_PATH", "data/order_catalog.json"),
     super_admin_usernames=_env_csv("SUPER_ADMIN_USERNAMES"),
     seed_demo_data=_env_bool("SEED_DEMO_DATA", True),
+    cors_allowed_origins=os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"),
     session_cookie_name=os.getenv("SESSION_COOKIE_NAME", "harborsuite_session"),
     session_cookie_secure=_env_bool("SESSION_COOKIE_SECURE", os.getenv("APP_ENV", "dev") != "dev"),
 )

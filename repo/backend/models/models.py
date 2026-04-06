@@ -39,6 +39,7 @@ class FolioEntryType(str, enum.Enum):
     CHARGE = "charge"
     PAYMENT = "payment"
     ADJUSTMENT = "adjustment"
+    REVERSAL = "reversal"
 
 
 class OrderState(str, enum.Enum):

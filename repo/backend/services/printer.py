@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import re
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -15,9 +17,15 @@ def _dispatch_to_local_printer(queue_file: Path) -> bool:
     template = settings.print_command_template.strip()
     if not template:
         return False
-    command = template.replace("{file}", str(queue_file))
+    file_path = str(queue_file)
+    if not re.match(r'^[\w\-./\\: ]+$', file_path):
+        return False
     try:
-        result = subprocess.run(command, shell=True, check=False, capture_output=True, text=True)
+        parts = shlex.split(template)
+        args = [file_path if part == "{file}" else part for part in parts]
+        if "{file}" not in parts:
+            args.append(file_path)
+        result = subprocess.run(args, shell=False, check=False, capture_output=True, text=True)
         return result.returncode == 0
     except Exception:
         return False

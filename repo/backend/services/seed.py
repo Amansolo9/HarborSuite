@@ -65,10 +65,10 @@ def seed_if_empty(db: Session) -> None:
             created_by_user_id=primary_guest.id,
             state=OrderState.CONFIRMED,
             subtotal_amount=Decimal("22.00"),
-            packaging_fee=Decimal("2.00"),
-            service_fee=Decimal("4.00"),
-            tax_amount=Decimal("2.80"),
-            total_amount=Decimal("30.80"),
+            packaging_fee=Decimal("2.50"),
+            service_fee=Decimal("3.96"),
+            tax_amount=Decimal("2.85"),
+            total_amount=Decimal("31.31"),
             payment_method=PaymentMethod.DIRECT_BILL,
             order_items_json=json.dumps(
                 [

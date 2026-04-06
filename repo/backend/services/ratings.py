@@ -1,10 +1,22 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 from backend.models import Order, OrderState, Rating, Role, UserAccount
 from backend.services.audit import audit_event
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
 
 
 def submit_rating(
@@ -38,6 +50,10 @@ def submit_rating(
         raise KeyError("Order not found.")
     if order.state not in {OrderState.DELIVERED, OrderState.REFUNDED, OrderState.CANCELED}:
         raise ValueError("Ratings are allowed only after service completion.")
+
+    completion_time = order.service_end_at or order.updated_at or order.created_at
+    if _now() - _as_utc(completion_time) > timedelta(days=7):
+        raise ValueError("Ratings must be submitted within 7 days of service completion.")
 
     guest_id = order.created_by_user_id
     eligible_staff_roles = {Role.SERVICE_STAFF}
