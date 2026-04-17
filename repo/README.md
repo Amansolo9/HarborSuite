@@ -1,195 +1,159 @@
 # HarborSuite Offline Hotel Commerce & PMS
 
-This folder is the full product workspace (`fullstack/`).
+This folder is the full product workspace (`fullstack/`). Everything below runs inside Docker - no local Python, Node, or Playwright installs are required for reviewers.
 
-## One-command Docker start (offline runtime profile)
+## Quick start (Docker-only, strict)
 
-From this directory, run:
-
-```bash
-docker compose up
-```
-
-If you need to build images first in a connected environment:
+From this directory:
 
 ```bash
-docker compose build
+docker compose up --build
 ```
 
-The services will be available at:
+That single command starts the full stack. All dependencies (Python packages, Node modules, Playwright browsers) are baked into the images at build time - nothing is installed into your host environment at runtime.
 
-- Backend API: `http://localhost:8000`
-- Frontend UI: `http://localhost:5173`
+Services are available at:
 
-Docker compose starts all services:
+| Service  | URL                       | Container        |
+|----------|---------------------------|------------------|
+| Backend  | `http://localhost:8000`   | `app`            |
+| Frontend | `http://localhost:5173`   | `frontend`       |
+| Database | `localhost:5432`          | `db` (PostgreSQL 16) |
 
-- `db`: PostgreSQL 16 (`localhost:5432`)
-- `app`: FastAPI backend (`localhost:8000`)
-- `frontend`: prebuilt Vite preview server (`localhost:5173`)
+To shut down:
 
-Docker startup does not run `npm install` at container runtime; frontend dependencies are baked into the image during build.
+```bash
+docker compose down
+```
 
-Production-safe compose profile:
+Production-safe compose profile (requires strong secrets, disables demo seeding):
 
 ```bash
 docker compose -f docker-compose.prod.yml up
 ```
 
-The production profile requires strong secrets, sets `APP_ENV=production`, enables secure cookies, and disables demo seeding.
+## Demo credentials (dev profile only)
 
-## Local development
+Demo data is seeded when `SEED_DEMO_DATA=true` (the default in the `dev` profile). Every seeded user shares the same password.
 
-### Backend
+| Role              | Username                     | Password        |
+|-------------------|------------------------------|-----------------|
+| Guest             | `guest@seabreeze.local`      | `Harbor#2026!`  |
+| Front Desk        | `desk@seabreeze.local`       | `Harbor#2026!`  |
+| Service Staff     | `service@seabreeze.local`    | `Harbor#2026!`  |
+| Finance           | `finance@seabreeze.local`    | `Harbor#2026!`  |
+| Content Editor    | `editor@seabreeze.local`     | `Harbor#2026!`  |
+| General Manager   | `gm@seabreeze.local`         | `Harbor#2026!`  |
+| Cross-org GM      | `gm@summit.local`            | `Harbor#2026!`  |
 
-PostgreSQL must be running locally before non-Docker backend startup/tests. Quick local bootstrap:
+In `APP_ENV=production` the startup guard refuses to boot with demo seeding enabled or with the demo `JWT_SECRET` / `EXPORT_CHECKSUM_SECRET` values still in place.
 
-```bash
-docker compose up -d db
-```
+## Verification (copy-paste acceptance flow)
 
-```bash
-python -m venv .venv
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-# Linux/macOS
-source .venv/bin/activate
-python -m pip install -r backend/requirements.txt
-# Windows PowerShell
-$env:DATABASE_URL="postgresql+psycopg://harborsuite:harborsuite@localhost:5432/harborsuite"
-# Linux/macOS
-export DATABASE_URL="postgresql+psycopg://harborsuite:harborsuite@localhost:5432/harborsuite"
-python scripts/bootstrap_db.py
-uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
-```
+After `docker compose up --build` reports both `app` and `frontend` as ready, run these checks from any host shell. Every step lists the expected outcome so a reviewer can confirm acceptance without reading source.
 
-Local backend defaults to PostgreSQL (`postgresql+psycopg://harborsuite:harborsuite@localhost:5432/harborsuite`).
-
-If you want a quick SQLite-only fallback for ad hoc local development:
+### 1. Backend health
 
 ```bash
-# Windows PowerShell
-$env:DATABASE_URL="sqlite:///./fullstack.db"
-# Linux/macOS
-export DATABASE_URL="sqlite:///./fullstack.db"
-python scripts/bootstrap_db.py
-uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+curl -s http://localhost:8000/health
 ```
 
-### Frontend
+Expected body:
+
+```json
+{"status":"ok","mode":"offline-ready"}
+```
+
+### 2. Login and issue a bearer token
 
 ```bash
-cd frontend
-npm install
-npm run dev
+curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -H 'x-harborsuite-auth-mode: bearer' \
+  -d '{"username":"gm@seabreeze.local","password":"Harbor#2026!"}'
 ```
 
-Frontend dev URL: `http://localhost:5173`
+Expected: HTTP 200 with a JSON body containing `access_token`, `role: "general_manager"`, and `organization_name: "Seabreeze Harbor"`. Copy the `access_token` value for the next step.
 
-Frontend tests:
+### 3. Call an authenticated endpoint
 
 ```bash
-cd frontend
-npm install
-npm run test
+curl -s http://localhost:8000/api/v1/operations/overview \
+  -H "Authorization: Bearer <paste access_token here>"
 ```
 
-Frontend browser E2E (Playwright):
+Expected: HTTP 200 JSON body with `property_name`, `role`, and non-negative counters such as `open_folios`, `active_orders`, `open_complaints`, `pending_exports`.
+
+### 4. Reject unauthenticated access
 
 ```bash
-cd frontend
-npm install
-npx playwright install
-npm run test:e2e
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/v1/orders
 ```
 
-Notes:
+Expected output: `401`.
 
-- Browser auth uses httpOnly cookie sessions by default (token is not stored in browser Web Storage).
-- For local non-HTTPS dev, `SESSION_COOKIE_SECURE=false` default applies in `APP_ENV=dev`.
-- E2E runner bootstraps schema + seed automatically via `python scripts/bootstrap_db.py` before backend startup.
+### 5. Frontend UI acceptance walk-through
 
-Minimal acceptance check:
+Open `http://localhost:5173` in a browser and:
+
+1. Log in as `gm@seabreeze.local` / `Harbor#2026!` - you should land on the GM dashboard and see folio, order, and complaint summaries.
+2. Log out, then log in as `desk@seabreeze.local` - confirm the Folio Operations panel appears with the seeded Maya Chen folio.
+3. Log out, then log in as `guest@seabreeze.local` - confirm only the guest's own folio and order composer are visible; back-office panels are hidden.
+
+If all five checks match, the deployment is accepted.
+
+## Automated test run (Docker-only)
+
+All tests also run inside the `app` image with no host-side dependency installs:
 
 ```bash
-python -m pytest unit_tests API_tests
-cd frontend
-npm install
-npm run test
-npm run build
-npx playwright install
-npm run test:e2e
+docker compose build app
+docker compose run --rm app sh -c \
+  "DATABASE_URL=sqlite:///./migration_check.db python -m alembic upgrade head && \
+   DATABASE_URL=sqlite:///./migration_check.db python -m pytest unit_tests API_tests"
 ```
 
-## Tests
+Expected: pytest summary ends with `passed` for every collected test.
 
-```bash
-python -m pytest unit_tests API_tests
-```
+The helper `./run_tests.sh` wraps the same flow. If you invoke it on a host that already has pytest available it will use that; otherwise it falls back to the Docker path above.
 
-Non-Docker verification (backend + frontend):
+## Core API coverage in this build
 
-```bash
-python scripts/verify_non_docker.py
-```
-
-`verify_non_docker.py` enforces a PostgreSQL `DATABASE_URL` by default so local acceptance verification matches deployment requirements.
-
-PostgreSQL smoke target (when `DATABASE_URL` points to PostgreSQL):
-
-```bash
-python -m pytest API_tests/test_postgres_smoke.py
-```
-
-Or:
-
-```bash
-./run_tests.sh
-```
-
-## Development seed credentials
-
-Demo credentials are only seeded when `SEED_DEMO_DATA=true` (default in dev). In non-dev environments, startup blocks if demo seeding is enabled.
-
-- Demo role usernames are listed in the login panel.
-- Demo password (dev only): `Harbor#2026!`
+- Auth + session: `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`
+- Hotel overview: `GET /api/v1/operations/overview`
+- Orders: quote / create / list / transition / split / merge / allocations
+- Folios: list / charge / payment / adjustment / reversal / split / merge / receipt / invoice / print
+- Content governance: create / list / approve / rollback
+- Complaints + 7-day evidence packet export (metadata + downloadable file)
+- Mutual guest/staff ratings with 7-day window
+- Offline exports + tamper-evident audit logs
+- Governance metadata APIs: metrics, lineage, dataset versions, dictionary export
+- Acceptance support: credit score, night audit, day-close, GM analytics
 
 ## Security runtime guard
 
-- Set `APP_ENV=production` (or non-dev value) outside local development.
-- In non-dev mode you must provide strong secrets for `JWT_SECRET` and `EXPORT_CHECKSUM_SECRET`.
-- Startup refuses to run with known demo secrets or `SEED_DEMO_DATA=true`.
+- `APP_ENV=production` must be set outside dev.
+- Strong `JWT_SECRET` and `EXPORT_CHECKSUM_SECRET` are mandatory outside dev; startup refuses to run with known demo secrets or `SEED_DEMO_DATA=true`.
+- Browser auth uses httpOnly cookie sessions by default; access tokens are not stored in browser Web Storage.
+- CSRF double-submit protection is enforced on mutating cookie-authenticated requests.
 
 ## Local printer adapter
 
 - Print jobs are always written to `data/print_queue/<organization>/print-job-<id>.json` for audit/fallback.
-- To enable direct local dispatch, set `PRINT_COMMAND_TEMPLATE` with `{file}` placeholder.
-  - Example (Windows PowerShell print verb): `PRINT_COMMAND_TEMPLATE=powershell -Command Start-Process -FilePath "{file}" -Verb Print`
-
-## Core API coverage in this build
-
-- Auth + session: `POST /api/v1/auth/login`, `GET /api/v1/auth/me`
-- Hotel overview: `GET /api/v1/operations/overview`
-- Orders: create/list/transition
-- Order dimensions: split/merge/list allocations by supplier/warehouse/SLA
-- Folios: list/charge/payment/adjustment/reversal/split/merge/receipt/print
-- Content governance: create/list/approve/rollback
-- Complaints + evidence packet export + 7-day policy window
-- Mutual guest/staff ratings
-- Offline exports + audit logs
-- Governance metadata APIs: metrics, lineage, dataset versions, dictionary export
-- Acceptance support: credit score, night audit, day-close, GM analytics
-
-## Persistence notes
-
-- Runtime persistence is SQLAlchemy-backed (session tokens, orders, folios, content, complaints, exports, audit events).
-- Docker path uses PostgreSQL for persistent on-prem style deployment.
-- Non-Docker acceptance verification is PostgreSQL-first.
-- SQLite remains an explicit local fallback only when `DATABASE_URL=sqlite:///./fullstack.db` is set.
+- To enable direct local dispatch, set `PRINT_COMMAND_TEMPLATE` with a `{file}` placeholder; the backend invokes the command via `subprocess` with argv parameterization, not a shell.
+  - Windows example: `PRINT_COMMAND_TEMPLATE=powershell -Command Start-Process -FilePath "{file}" -Verb Print`
 
 ## Order catalog configuration
 
 - Authoritative order catalog data is read at runtime from `data/order_catalog.json` (or `ORDER_CATALOG_PATH` if set).
-- Backend quote/order validation and frontend catalog picker both use this API-backed catalog (`GET /api/v1/orders/catalog`).
-- Updating the catalog file does not require frontend code edits.
+- Backend quote/order validation and the frontend catalog picker both use `GET /api/v1/orders/catalog`; updating the catalog file does not require frontend code changes.
 
-Architecture and API behavior docs are maintained at repository root (`../docs/design.md`, `../docs/api-spec.md`).
+## Persistence notes
+
+- Runtime persistence is SQLAlchemy-backed (session tokens, orders, folios, content, complaints, exports, audit events).
+- The Docker profile uses PostgreSQL for persistent on-prem-style deployment.
+- SQLite is only used by the in-container test target (`sqlite:///./migration_check.db`) and is not a deployment target.
+
+## Reference documentation
+
+Architecture and API behavior documentation lives at the repository root: `../docs/design.md` and `../docs/api-spec.md`.

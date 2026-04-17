@@ -315,6 +315,34 @@ def test_cross_org_object_access_is_blocked(client: TestClient) -> None:
     assert packet.status_code == 403
 
 
+def test_complaint_packet_download_returns_file(client: TestClient) -> None:
+    guest = auth_headers(client, "guest@seabreeze.local")
+    folio_id = _folio_for_guest("Maya Chen").id
+    complaint = client.post(
+        "/api/v1/complaints",
+        headers=guest,
+        json={
+            "folio_id": folio_id,
+            "subject": "Packet download smoke",
+            "detail": "Verify that the complaint packet file downloads with correct headers.",
+            "service_rating": 3,
+            "violation_flag": False,
+        },
+    )
+    assert complaint.status_code == 200
+    complaint_id = complaint.json()["id"]
+
+    meta = client.get(f"/api/v1/complaints/{complaint_id}/packet", headers=guest)
+    assert meta.status_code == 200
+    expected_filename = meta.json()["packet_filename"]
+
+    download = client.get(f"/api/v1/complaints/{complaint_id}/packet/download", headers=guest)
+    assert download.status_code == 200
+    assert download.content, "Download should stream a non-empty file body"
+    disposition = download.headers.get("content-disposition", "")
+    assert expected_filename in disposition
+
+
 def test_complaint_packet_same_org_is_role_restricted(client: TestClient) -> None:
     guest = auth_headers(client, "guest@seabreeze.local")
     desk = auth_headers(client, "desk@seabreeze.local")

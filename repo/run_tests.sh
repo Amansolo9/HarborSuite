@@ -2,7 +2,11 @@
 set -eu
 
 if python -m pytest --version >/dev/null 2>&1; then
-  DATABASE_URL=sqlite:///./migration_check.db python -m alembic upgrade head
+  if ! python -c "import alembic" >/dev/null 2>&1; then
+    python -m pip install -r backend/requirements.txt
+  fi
+  export DATABASE_URL="${DATABASE_URL:-sqlite:///./migration_check.db}"
+  python -m alembic upgrade head
   python -m pytest unit_tests API_tests
 else
   docker compose build app

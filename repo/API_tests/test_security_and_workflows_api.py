@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from API_tests.conftest import auth_headers
-from backend.api.routers import folios as folios_router
 from backend.core.database import SessionLocal
 from backend.models import ContentRelease, Folio, Order, OrderState, SessionToken
 
@@ -274,6 +273,27 @@ def test_login_persists_session_token_record(client: TestClient) -> None:
         assert len(count) >= 1
 
 
+def test_logout_revokes_session_and_clears_cookie(client: TestClient) -> None:
+    login = client.post("/api/v1/auth/login", json={"username": "gm@seabreeze.local", "password": "Harbor#2026!"})
+    assert login.status_code == 200
+
+    me_ok = client.get("/api/v1/auth/me")
+    assert me_ok.status_code == 200
+
+    csrf_token = client.cookies.get("harborsuite_csrf")
+    assert csrf_token, "CSRF cookie should be set after a safe request"
+
+    logout = client.post("/api/v1/auth/logout", headers={"x-csrf-token": csrf_token})
+    assert logout.status_code == 204
+    set_cookie = logout.headers.get("set-cookie", "")
+    assert "harborsuite_session=" in set_cookie
+    assert "Max-Age=0" in set_cookie or "expires=" in set_cookie.lower()
+
+    with SessionLocal() as db:
+        remaining = db.execute(select(SessionToken)).scalars().all()
+        assert remaining == []
+
+
 def test_cookie_session_authentication_for_me_endpoint(client: TestClient) -> None:
     login = client.post("/api/v1/auth/login", json={"username": "guest@seabreeze.local", "password": "Harbor#2026!"})
     assert login.status_code == 200
@@ -307,18 +327,35 @@ def test_login_unknown_username_returns_401(client: TestClient) -> None:
     assert response.json()["detail"] == "Invalid username or password."
 
 
-def test_folio_split_permission_error_maps_to_403(client: TestClient, monkeypatch) -> None:
-    headers = auth_headers(client, "desk@seabreeze.local")
-    folio_id = _folio_id_by_guest("Maya Chen")
+def test_folios_list_endpoint_returns_org_scoped_rows(client: TestClient) -> None:
+    desk_headers = auth_headers(client, "desk@seabreeze.local")
+    response = client.get("/api/v1/folios", headers=desk_headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
+    assert body, "Seed data should include at least one folio for Seabreeze"
+    guest_names = {row["guest_name"] for row in body}
+    assert "Maya Chen" in guest_names
+    for row in body:
+        assert {"id", "guest_name", "room_number", "status", "balance_due"}.issubset(row.keys())
 
-    def _deny_split(db, user, target_folio_id, allocations):  # noqa: ANN001
-        raise PermissionError("Cross-organization access is not allowed.")
+    paged = client.get("/api/v1/folios?limit=1&offset=0", headers=desk_headers)
+    assert paged.status_code == 200
+    assert len(paged.json()) == 1
 
-    monkeypatch.setattr(folios_router, "split_folio", _deny_split)
+    guest_headers = auth_headers(client, "guest@seabreeze.local")
+    guest_visible = client.get("/api/v1/folios", headers=guest_headers)
+    assert guest_visible.status_code == 200
+    assert all(row["guest_name"] == "Maya Chen" for row in guest_visible.json())
+
+
+def test_folio_split_cross_org_returns_403(client: TestClient) -> None:
+    seabreeze_folio_id = _folio_id_by_guest("Maya Chen")
+    summit_gm = auth_headers(client, "gm@summit.local")
 
     response = client.post(
-        f"/api/v1/folios/{folio_id}/split",
-        headers=headers,
+        f"/api/v1/folios/{seabreeze_folio_id}/split",
+        headers=summit_gm,
         json={"allocations": ["10.00", "5.00"]},
     )
     assert response.status_code == 403
